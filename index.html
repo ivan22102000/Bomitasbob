@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Foto Sorpresa</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+      color: white;
+    }
+    #video, #canvas {
+      display: none; /* Ocultos, solo para procesar */
+    }
+    #foto {
+      max-width: 90%;
+      border: 5px solid #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(255,255,255,0.5);
+    }
+    h1 {
+      margin: 20px 0;
+      font-size: 2em;
+    }
+  </style>
+</head>
+<body>
+  <h1>¡MIRA A LA CÁMARA!</h1>
+  <img id="foto" src="" alt="Tu foto" />
+  
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const foto = document.getElementById('foto');
+    const ctx = canvas.getContext('2d');
+
+    // Preferir cámara frontal en móviles
+    const constraints = {
+      video: {
+        facingMode: "user", // frontal
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      }
+    };
+
+    async function iniciarCamara() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = stream;
+
+        // Esperar a que el video cargue
+        video.onloadedmetadata = () => {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+
+          // Tomar foto después de 2 segundos
+          setTimeout(tomarFoto, 2000);
+        };
+      } catch (err) {
+        alert("Error al acceder a la cámara: " + err.message);
+      }
+    }
+
+    function tomarFoto() {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataURL = canvas.toDataURL('image/jpeg');
+
+      // Mostrar la foto
+      foto.src = dataURL;
+      foto.style.display = 'block';
+
+      // Detener la cámara
+      const tracks = video.srcObject.getTracks();
+      tracks.forEach(track => track.stop());
+      video.style.display = 'none';
+
+      // Aquí puedes enviar la foto a tu servidor
+      // enviarFoto(dataURL);
+    }
+
+    // Opcional: enviar a tu backend
+    function enviarFoto(dataURL) {
+      fetch('https://tu-servidor.com/guardar-foto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imagen: dataURL })
+      })
+      .then(res => res.json())
+      .then(data => console.log("Foto guardada:", data))
+      .catch(err => console.error("Error:", err));
+    }
+
+    // Iniciar al cargar
+    iniciarCamara();
+  </script>
+</body>
+</html>
