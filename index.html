@@ -11,7 +11,8 @@
       height: 100%;
       width: 100%;
       overflow: hidden;
-      background: #000;
+      /* Fondo gradiente negro a rojo */
+      background: linear-gradient(to bottom, #000000, #ff0000);
     }
     #foto {
       position: fixed;
@@ -47,7 +48,6 @@
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const foto = document.getElementById('foto');
-
     const ctx = canvas.getContext('2d');
 
     const constraints = {
@@ -63,13 +63,12 @@
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = stream;
 
-        video.onloadedmetadata = () => {
+        // Tomar foto apenas el video empiece a reproducirse
+        video.addEventListener('play', () => {
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
-
-          // Tomar la foto inmediatamente
           tomarFoto();
-        };
+        });
       } catch (err) {
         console.error("Error al acceder a la cámara:", err);
       }
